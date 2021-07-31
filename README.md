@@ -2,6 +2,12 @@
 
 The original handout is [here](./Handout.md).
 
+To learn the basics of openmp, I highly recommend this [tutorial](./openmp_tutorial/Intro_To_OpenMP_Mattson.pdf).
+
+To understand the **omp parallel for** better, you should read this [short article](./openmp_tutorial/OpenMP_Dynamic_Scheduling.pdf). 
+
+There is also a openmp cheatsheet for you [here](./openmp_tutorial/OpenMP3.0-SummarySpec.pdf).
+
 ## Part 1: Warm up: Implementing Page Rank (16 points)
 
 ![image-20210731125813214](./images/pr_score.png)
