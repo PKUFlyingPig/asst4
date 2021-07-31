@@ -107,6 +107,31 @@ void bfs_top_down(Graph graph, solution* sol) {
     }
 }
 
+bool bottom_up_step(
+    Graph g,
+    int* distances,
+    int iteration)
+{
+    bool stop = true;
+    for (int i = 0; i < g->num_nodes; i++) {
+        if (distances[i] != NOT_VISITED_MARKER) continue;
+        int start_edge = g->incoming_starts[i];
+        int end_edge = (i == g->num_nodes - 1)
+                        ? g->num_edges
+                        : g->incoming_starts[i + 1];
+
+        for (int neighbor = start_edge; neighbor < end_edge; neighbor++) {
+            int incoming = g->incoming_edges[neighbor];
+            if (distances[incoming] == iteration) {
+                stop = false;
+                distances[i] = iteration + 1;
+                break;
+            }
+        }
+    }
+    return stop;
+}
+
 void bfs_bottom_up(Graph graph, solution* sol)
 {
     // CS149 students:
@@ -120,6 +145,30 @@ void bfs_bottom_up(Graph graph, solution* sol)
     // As was done in the top-down case, you may wish to organize your
     // code by creating subroutine bottom_up_step() that is called in
     // each step of the BFS process.
+    // initialize all nodes to NOT_VISITED
+    for (int i=0; i<graph->num_nodes; i++)
+        sol->distances[i] = NOT_VISITED_MARKER;
+
+    // setup frontier with the root node
+    sol->distances[ROOT_NODE_ID] = 0;
+
+    bool stop = false;
+    int iteration = 0;
+    while (!stop) {
+
+#ifdef VERBOSE
+        double start_time = CycleTimer::currentSeconds();
+#endif
+
+        stop = bottom_up_step(graph, sol->distances, iteration);
+
+#ifdef VERBOSE
+    double end_time = CycleTimer::currentSeconds();
+    printf("frontier=%-10d %.4f sec\n", frontier->count, end_time - start_time);
+#endif
+
+        iteration++;
+    }
 }
 
 void bfs_hybrid(Graph graph, solution* sol)
