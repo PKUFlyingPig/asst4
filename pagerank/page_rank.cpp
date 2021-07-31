@@ -86,7 +86,7 @@ void pageRank(Graph g, double* solution, double damping, double convergence)
         const Vertex* end = incoming_end(g, i);
         for (const Vertex* v=start; v!=end; v++) {
           int vv = *v;
-          score_new[i] += solution[vv] / incoming_size(g, vv);
+          score_new[i] += solution[vv] / outgoing_size(g, vv);
         }
         score_new[i] = (damping * score_new[i]) + rest + randomJumpPr;
       }
