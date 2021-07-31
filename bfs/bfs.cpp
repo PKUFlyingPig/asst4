@@ -113,6 +113,7 @@ bool bottom_up_step(
     int iteration)
 {
     bool stop = true;
+    #pragma omp parallel for schedule(dynamic, 200)
     for (int i = 0; i < g->num_nodes; i++) {
         if (distances[i] != NOT_VISITED_MARKER) continue;
         int start_edge = g->incoming_starts[i];
