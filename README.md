@@ -20,16 +20,16 @@ Answer : In **Top Down** version, there are two synchronizations:
 
 ```c++
 if (distances[outgoing] == NOT_VISITED_MARKER && 
-                    __sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
-                    local_frontier[local_count++] = outgoing;
-                }
+    __sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
+    local_frontier[local_count++] = outgoing;
+}
 ```
 
 - Second, when add nodes into the frontier.
 
-```
+```c++
 int start_idx = __sync_fetch_and_add(&new_frontier->count, local_count);
-        memcpy(new_frontier->vertices + start_idx, local_frontier, local_count * sizeof(int));
+memcpy(new_frontier->vertices + start_idx, local_frontier, local_count * sizeof(int));
 ```
 
 In **Bottom Up** version, there is only one synchronization which is the same as the second one of the **Top Down** version.
