@@ -25,6 +25,7 @@ void pageRank(Graph g, double* solution, double damping, double convergence)
 
   int numNodes = num_nodes(g);
   double equal_prob = 1.0 / numNodes;
+  #pragma omp parallel for
   for (int i = 0; i < numNodes; ++i) {
     solution[i] = equal_prob;
   }
@@ -58,4 +59,45 @@ void pageRank(Graph g, double* solution, double damping, double convergence)
      }
 
    */
+    Vertex* sink_nodes = new int[numNodes];
+    int sink_nodes_num = 0;
+    for (Vertex i = 0; i < numNodes; i++) {
+      if (outgoing_size(g, i) == 0) {
+          sink_nodes[sink_nodes_num++] = i;
+      }
+    }
+    bool converged = false;
+    double rest = (1.0 - damping) / numNodes;
+    double *score_new = new double[numNodes];
+    while (!converged) {
+      double randomJumpPr = 0.0;
+      #pragma omp parallel for reduction (+:randomJumpPr) schedule(dynamic,200)
+      for (int j = 0; j < sink_nodes_num; j++) {
+        randomJumpPr += solution[sink_nodes[j]];
+      } 
+      randomJumpPr *= damping;
+      randomJumpPr /= numNodes;
+
+      #pragma omp parallel for schedule(dynamic,200)
+      for (int i=0; i<numNodes; i++) {
+        // Vertex is typedef'ed to an int. Vertex* points into g.outgoing_edges[]
+        score_new[i] = 0;
+        const Vertex* start = incoming_begin(g, i);
+        const Vertex* end = incoming_end(g, i);
+        for (const Vertex* v=start; v!=end; v++) {
+          int vv = *v;
+          score_new[i] += solution[vv] / incoming_size(g, vv);
+        }
+        score_new[i] = (damping * score_new[i]) + rest + randomJumpPr;
+      }
+
+      double global_diff = 0;
+      #pragma omp parallel for reduction (+:global_diff) schedule(dynamic,200)
+      for (int i = 0; i < numNodes; i++) {
+        global_diff += abs(score_new[i] - solution[i]);
+        solution[i] = score_new[i];
+      }
+      converged = (global_diff < convergence);
+    }
+    free(score_new);
 }

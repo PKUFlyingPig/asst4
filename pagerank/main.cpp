@@ -168,6 +168,8 @@ int main(int argc, char** argv) {
         std::cout << "Correctness: " << std::endl;
         if (!pr_check)
             std::cout << "Page Rank is not Correct" << std::endl;
+        else 
+            std::cout << "Page Rank is Correct" << std::endl;
         std::cout << std::endl << "Relative Speedup to Reference: " << std::endl <<  relative_timing.str();
     }
     //Run the code with only one thread count and only report speedup
