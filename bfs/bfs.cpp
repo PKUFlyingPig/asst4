@@ -31,26 +31,35 @@ void top_down_step(
     vertex_set* new_frontier,
     int* distances)
 {
+    #pragma omp parallel
+    {
+        int local_count = 0;
+        int* local_frontier = (int*)malloc(sizeof(int) * (g->num_nodes/omp_get_num_threads()));
 
-    for (int i=0; i<frontier->count; i++) {
+        #pragma omp for schedule(dynamic, 200)
+        for (int i=0; i<frontier->count; i++) {
 
-        int node = frontier->vertices[i];
+            int node = frontier->vertices[i];
 
-        int start_edge = g->outgoing_starts[node];
-        int end_edge = (node == g->num_nodes - 1)
-                           ? g->num_edges
-                           : g->outgoing_starts[node + 1];
+            int start_edge = g->outgoing_starts[node];
+            int end_edge = (node == g->num_nodes - 1)
+                            ? g->num_edges
+                            : g->outgoing_starts[node + 1];
 
-        // attempt to add all neighbors to the new frontier
-        for (int neighbor=start_edge; neighbor<end_edge; neighbor++) {
-            int outgoing = g->outgoing_edges[neighbor];
+            // attempt to add all neighbors to the new frontier
+            for (int neighbor=start_edge; neighbor<end_edge; neighbor++) {
+                int outgoing = g->outgoing_edges[neighbor];
 
-            if (distances[outgoing] == NOT_VISITED_MARKER) {
-                distances[outgoing] = distances[node] + 1;
-                int index = new_frontier->count++;
-                new_frontier->vertices[index] = outgoing;
-            }
+                if (distances[outgoing] == NOT_VISITED_MARKER && 
+                    __sync_bool_compare_and_swap(&distances[outgoing], NOT_VISITED_MARKER, distances[node] + 1)) {
+                    local_frontier[local_count++] = outgoing;
+                }
+           }
         }
+
+        int start_idx = __sync_fetch_and_add(&new_frontier->count, local_count);
+        memcpy(new_frontier->vertices + start_idx, local_frontier, local_count * sizeof(int));
+        free(local_frontier);
     }
 }
 
